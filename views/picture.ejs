@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picture Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .highlight {
+            background-color: #ffe4e1;
+            font-weight: bold;
+            color: red;
+        }
+        .title-highlight {
+            color: #e60000;
+            font-weight: bold;
+        }
+
+        .create-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .create-button a {
+        display: block;
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        font-size: 16px;
+        text-align: center;
+    }
+    .create-button:hover {
+        background-color: #45a049;
+    }
+        
+    .home-button {
+        font-weight: bold;
+        font-size: 18px;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background-image: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
+        color: white;
+        text-transform: uppercase;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .home-button:hover {
+        transform: scale(1.1);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    </style>
+
+</head>
+<body>
+    <button class="home-button" onclick="window.location.href='/'">Artist's Canvas</button>
+
+    <h1>소재 게시판</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Picture</th>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% posts.forEach(post => { %>
+                <tr onclick="window.location.href='/picture-content/<%= post._id %>'">
+                    <td><img src="<%= post.imageUrl %>" alt="<%= post.title %>" style="max-width: 300px; max-height: 200px;"></td>
+                    <td><%= post.title %></td>
+                    <td><%= post.author %></td>
+                    <td><%= new Date(post.createdAt).toLocaleDateString() %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+
+    <div class = "create-button">
+        <a href = "picture-post.html">글 작성</a>
+    </div>
+</body>
+</html>

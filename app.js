@@ -216,18 +216,10 @@ app.post('/debate-post', async(req, res)=>{
     }
 });
 
-
-app.get('/api/debate', async(req, res)=>{
-    try{
-        const posts = await DebatePost.find().sort({createdAt:-1}); //게시물을 시간 순서대로 가져온다
-        // Render the HTML with posts dynamically (using template engines like EJS or serving static HTML and JavaScript)
-        res.json(posts); // debate-post를 통해서 형성한 Database내 게시물을 json 형태로 응답으로 돌려준다.
-    }catch(err){
-        console.error('Error fetching posts:', err);
-        res.status(500).send('Error loading posts');
-    }
-
+app.get('/debate-post', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'debate-post.html'));
 });
+
 
 app.get('/debate', async (req, res) => {
     try {
@@ -239,9 +231,18 @@ app.get('/debate', async (req, res) => {
     }
 });
 
-app.get('/debate-post', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'debate-post.html'));
-});
+// app.get('/api/debate', async(req, res)=>{
+//     try{
+//         const posts = await DebatePost.find().sort({createdAt:-1}); //게시물을 시간 순서대로 가져온다
+//         // Render the HTML with posts dynamically (using template engines like EJS or serving static HTML and JavaScript)
+//         res.json(posts); // debate-post를 통해서 형성한 Database내 게시물을 json 형태로 응답으로 돌려준다.
+//     }catch(err){
+//         console.error('Error fetching posts:', err);
+//         res.status(500).send('Error loading posts');
+//     }
+
+// });
+
 
 //# 토론 게시판의 Comment 관련 database를 구축하기 위한 코드이다
 const commentSchema = new mongoose.Schema({
@@ -313,7 +314,7 @@ app.get('/debate-content/:id/edit', async (req, res) => {
 
         // 로그인을 한 User가 게시물을 작성한 User와 동일한지 확인하는 코드이다
         if (req.session.user && req.session.user.username === post.author) {
-            res.render('edit-post', { post });
+            res.render('debate-edit-post', { post });
         } else {
             res.status(403).send('You are not authorized to edit this post.');
         }
@@ -374,9 +375,122 @@ app.post('/debate-content/:id/delete', async(req,res)=>{
 
 
 // #5. 소재 게시판
-app.get('/picture', (req, res) =>{
-    res.sendFile(path.join(__dirname, 'public', 'picture.html'))
+// # 사진을 저장하기 위한 Database를 구축하는 코드이다
+const picturePostSchema = new mongoose.Schema({
+    title: String,
+    author: String,
+    content: String,
+    imageUrl: String,
+    createdAt: { type: Date, default: Date.now }
 });
+
+// Create a model from the schema
+const PicturePost = mongoose.model('PicturePost', picturePostSchema);
+
+// # 사진을 S3 데이터베이스에 저장하기 위한 코드이다
+// env 파일에 있는 S3관련 정보를 쓸 수 있게 해주는 것이, npm install dotenv를 통해서 가능하다 
+require('dotenv').config();
+
+const multer = require('multer');
+const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+
+// Set up Multer for handling file uploads
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
+
+// Configure the S3 client
+const s3 = new S3Client({
+    region: process.env.AWS_REGION,
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+    }
+});
+
+app.post('/picture-post', upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).send('No file uploaded');
+        }
+
+        // Extract data from the form
+        const { title, content } = req.body;
+        const author = req.session.user ? req.session.user.username : 'Anonymous'; // Determine the author based on session info
+
+        // Set up S3 upload parameters
+        const params = {
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: `${Date.now()}_${req.file.originalname}`,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype,
+            // ACL: 'public-read'
+        };
+
+        // Upload file to S3
+        const command = new PutObjectCommand(params);
+        const data = await s3.send(command);
+        const imageUrl = `https://${process.env.AWS_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
+
+        // Save the post data to the database
+        const newPicturePost = new PicturePost({
+            title,
+            author,
+            content: content,
+            imageUrl
+        });
+
+        await newPicturePost.save();
+        res.redirect('/picture');
+        // res.status(200).json({ message: 'File uploaded successfully', url: imageUrl });
+    } catch (error) {
+        console.error('Error uploading file:', error);
+        res.status(500).send('Error uploading file');
+    }
+});
+
+// #소재 게시판의 내용을 모두 보여준다.
+app.get('/picture', async (req, res) => {
+    try {
+        // Fetch all picture posts from the database
+        const posts = await PicturePost.find().sort({ createdAt: -1 });
+
+        // Render the picture.ejs file with the fetched data
+        res.render('picture', { posts });
+    } catch (error) {
+        console.error('Error fetching picture posts:', error);
+        res.status(500).send('Error loading picture posts');
+    }
+    // res.sendFile(path.join(__dirname, 'public', 'picture.html'))
+});
+
+// # 소재 게시판의 게시물을 id를 통해서 가져와서 Server에서 rendering을 한 후, Client에게 보여준다.
+app.get('/picture-content/:id', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await PicturePost.findById(postId);
+        // Comment 가 형성되지 않더라도, 비어 있는 Array로 구성되도록 한다
+        const comments = await Comment.find({ postId }).sort({ createdAt: -1 }) || [];
+
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
+        // user가 로그인 돼 있는지 여부와 그 user가 해당 post를 쓴 사람과 동일한지 여부를 확인하고, Client에게 해당 정보를 넘기는 코드이다
+        const isAuthor = req.session.user && req.session.user.username == post.author;
+        
+        //post,comment 관련 데이터를 Server에서 rendering하고, Client에게 보여준다
+        res.render('picture-content', { post, comments, isAuthor });
+    } catch (err) {
+        console.error('Error fetching post or comments:', err);
+        res.status(500).send('Error loading post or comments');
+    }
+});
+
+
+app.get('/picture-post', async(req, res)=>{
+
+
+});
+
 
 // #6. 실력 향상 게시판
 app.get('/enhance', (req, res) =>{

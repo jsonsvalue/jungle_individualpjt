@@ -1,1 +1,120 @@
-<h1>Picture</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Artist's Cavnas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .highlight {
+            background-color: #ffe4e1;
+            font-weight: bold;
+            color: red;
+        }
+        .title-highlight {
+            color: #e60000;
+            font-weight: bold;
+        }
+
+        .create-button {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        background-color: #4CAF50;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    .create-button a {
+        display: block;
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        font-size: 16px;
+        text-align: center;
+    }
+    .create-button:hover {
+        background-color: #45a049;
+    }
+        
+    </style>
+</head>
+<body>
+    <h1>소재 게시판</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>분류</th>
+                <th>제목</th>
+                <th>작성자</th>
+                <th>작성일</th>
+
+            </tr>
+        </thead>
+        
+        <tbody>
+            <tr>                
+                <td class="highlight">공지</td>
+                <td class="title-highlight">★삼성그룹 2024 하반기 서류 합격자 발표</td>
+                <td>독취사지기</td>
+                <td>2024.10.04</td>
+
+            </tr>
+            <tr>
+                <td>공지</td>
+                <td>SK그룹 합격지원반 2만원 할인 이벤트</td>
+                <td>독취사지기</td>
+                <td>16:47</td>
+
+            </tr>
+            <!-- Add more rows as needed -->
+        </tbody>
+    </table>
+
+    <div class = "create-button">
+        <a href = "picture-post.html">글 작성</a>
+    </div>
+
+    <script>
+        async function loadDebatePosts(){
+            const response = await fetch('/api/debate');
+            const posts = await response.json();
+
+            const tbody = document.querySelector('tbody');
+            tbody.innerHTML = ''; //HTML 내부의 데이터를 초기화한다
+            
+            posts.forEach(post =>{
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td>${post.board}</td>
+                <td>${post.title}</td>
+                <td>${post.author}</td>
+                <td>${new Date(post.createdAt).toLocaleDateString()}</td>
+                `;
+
+                row.addEventListener('click', ()=>{
+                    window.location.href = `debate-content.html?id=${post._id}`;
+                });
+
+                tbody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadDebatePosts);
+    </script>
+
+</body>
+</html>

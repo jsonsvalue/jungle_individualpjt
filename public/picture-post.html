@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Artist's Canvas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            width: 800px;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+            box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        .title {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .input-group select,
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .toolbar {
+            margin: 15px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .toolbar button {
+            padding: 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <form action="/picture-post" method="POST" enctype="multipart/form-data">
+        <div class="input-group">
+            <label for="board">게시판을 선택해 주세요</label>
+            <select id="board" name="board">
+                <option value="">말머리 선택</option>
+                <option value="notice">Notice</option>
+                <option value="discussion">Picture</option>
+                <!-- Add more options as needed -->
+            </select>
+        </div>
+    
+        <div class="input-group">
+            <label for="title">제목을 입력해 주세요</label>
+            <input type="text" id="title" name="title" placeholder="제목을 입력해 주세요">
+        </div>
+    
+        <div class="input-group">
+            <label for="content">내용을 입력해 주세요</label>
+            <textarea id="content" name="content" rows="10" placeholder="내용을 입력해 주세요"></textarea>
+        </div>
+    
+        <div class="input-group">
+            <label for="image">이미지를 선택해 주세요</label>
+            <input type="file" id="image" name="image" accept="image/*">
+        </div>
+    
+        <button type="submit">등록</button>
+    </form>
+
+
+</body>
+</html>
+
