@@ -7,6 +7,10 @@ const path = require('path');
 // 비밀번호를 Hash function을 통해 암호화하는 Library이다
 const argon2 = require('argon2');
 
+//#EJS 를 View Engine으로 설정
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
 //# Mongo DB
 // S3에서 저장된 주소에 대한 URL 반환, Mongo DB에는 그 URL 값만 저장한다.
 const mongoose = require('mongoose')
@@ -225,21 +229,153 @@ app.get('/api/debate', async(req, res)=>{
 
 });
 
-
-
-app.get('/debate', (req, res) =>{
-    res.sendFile(path.join(__dirname, 'public', 'debate.html'))
+app.get('/debate', async (req, res) => {
+    try {
+        const posts = await DebatePost.find().sort({ createdAt: -1 });
+        res.render('debate', { posts });
+    } catch (err) {
+        console.error('Error fetching posts:', err);
+        res.status(500).send('Error loading posts');
+    }
 });
 
 app.get('/debate-post', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'debate-post.html'));
 });
 
+//# 토론 게시판의 Comment 관련 database를 구축하기 위한 코드이다
+const commentSchema = new mongoose.Schema({
+    postId : {type:mongoose.Schema.Types.ObjectId, ref:'DebatePost'},
+    author : String,
+    content : String,
+    createdAt : {type:Date, default:Date.now}
+});
+
+const Comment = mongoose.model('Comment', commentSchema);
+
+// 토론 게시판의 Comment 관련 data를 저장하기 위한 코드이다
+app.post('/debate-content/:id/comment', async(req,res)=>{
+    const postId = req.params.id;
+    const {content} = req.body;
+    const author = req.session.user? req.session.user.username : 'Anonymous';
+    
+    // Comment관련 data를 변수에 저장하고, 
+    const newComment = new Comment({
+        postId,
+        author, 
+        content,
+    });
+
+    try{
+    // 해당 변수를 database에 저장하고 해당 게시물을 보여주는 코드이다   
+        await newComment.save();
+        res.redirect(`/debate-content/${postId}`);
+    }catch(err){
+        console.error('Error saving comment:', err);
+        res.status(500).send('Error saving comment');
+    }
+
+});
+
+// # 토론 게시판의 게시물을 id를 통해서 가져와서 Server에서 rendering을 한 후, Client에게 보여준다.
+app.get('/debate-content/:id', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await DebatePost.findById(postId);
+        // Comment 가 형성되지 않더라도, 비어 있는 Array로 구성되도록 한다
+        const comments = await Comment.find({ postId }).sort({ createdAt: -1 }) || [];
+
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
+        // user가 로그인 돼 있는지 여부와 그 user가 해당 post를 쓴 사람과 동일한지 여부를 확인하고, Client에게 해당 정보를 넘기는 코드이다
+        const isAuthor = req.session.user && req.session.user.username == post.author;
+        
+        //post,comment 관련 데이터를 Server에서 rendering하고, Client에게 보여준다
+        res.render('debate-content', { post, comments, isAuthor });
+    } catch (err) {
+        console.error('Error fetching post or comments:', err);
+        res.status(500).send('Error loading post or comments');
+    }
+});
+
+// # 토론 게시판의 게시물을 user 가 수정/삭제하기 위한 코드이다
+// 토론 게시판의 게시물을 수정하기 위한 코드이다
+// 게시물을 수정하기 위한 페이지를 가져온다
+app.get('/debate-content/:id/edit', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const post = await DebatePost.findById(postId);
+
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
+
+        // 로그인을 한 User가 게시물을 작성한 User와 동일한지 확인하는 코드이다
+        if (req.session.user && req.session.user.username === post.author) {
+            res.render('edit-post', { post });
+        } else {
+            res.status(403).send('You are not authorized to edit this post.');
+        }
+    } catch (err) {
+        console.error('Error fetching post for editing:', err);
+        res.status(500).send('Error loading post for editing');
+    }
+});
+
+// 게시물의 수정한 내용을 저장하는 코드이다
+app.post('/debate-content/:id/edit', async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { title, content } = req.body;
+        const post = await DebatePost.findById(postId);
+
+        if (!post) {
+            return res.status(404).send('Post not found');
+        }
+
+        // 수정한 게시물의 내용을 저장하는 코드이다
+        if (req.session.user && req.session.user.username === post.author) {
+            post.title = title;
+            post.content = content;
+            await post.save();
+            res.redirect(`/debate-content/${postId}`);
+        } else {
+            res.status(403).send('You are not authorized to edit this post.');
+        }
+    } catch (err) {
+        console.error('Error updating post:', err);
+        res.status(500).send('Error updating post');
+    }
+});
+
+// 게시물의 내용을 삭제하는 코드이다
+app.post('/debate-content/:id/delete', async(req,res)=>{
+    try{
+        const postId = req.params.id;
+        const post = await DebatePost.findById(postId);
+
+        if(!post){
+            return res.status(404).send('Post not found');
+        }
+    
+        if(req.session.user && req.session.user.username == post.author){
+            await DebatePost.deleteOne({_id:postId});
+            await Comment.deleteMany({postId:postId});
+            res.redirect('/debate');
+        }else{
+            res.status(403).send('You are not authorized to delete this post');
+        }
+    }catch(err){
+        console.error('Error deleting post:', err);
+        res.status(500).send('Error deleting post');
+    }
+});
 
 
-// #5. 과외 게시판
-app.get('/lesson', (req, res) =>{
-    res.sendFile(path.join(__dirname, 'public', 'lesson.html'))
+// #5. 소재 게시판
+app.get('/picture', (req, res) =>{
+    res.sendFile(path.join(__dirname, 'public', 'picture.html'))
 });
 
 // #6. 실력 향상 게시판
@@ -248,9 +384,9 @@ app.get('/enhance', (req, res) =>{
 });
 
 
-// #7. 소재 게시판
-app.get('/picture', (req, res) =>{
-    res.sendFile(path.join(__dirname, 'public', 'picture.html'))
+// #7. 과외 게시판
+app.get('/lesson', (req, res) =>{
+    res.sendFile(path.join(__dirname, 'public', 'lesson.html'))
 });
 
 // #8. 마이페이지
