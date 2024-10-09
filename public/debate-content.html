@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post and Comment Section</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .post-container {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 600px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .post-title {
+            font-weight: bold;
+            font-size: 18px;
+            margin: 0;
+        }
+        .post-author {
+            font-size: 14px;
+            color: gray;
+            margin-left: auto;
+        }
+        .post-content {
+            margin-top: 15px;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333;
+        }
+        .post-links a {
+            display: block;
+            margin: 10px 0;
+            text-decoration: none;
+            color: #1a0dab;
+        }
+        .post-links a:hover {
+            text-decoration: underline;
+        }
+        .post-footer {
+            margin-top: 20px;
+            font-size: 14px;
+            color: gray;
+        }
+        .comment-section {
+            margin-top: 30px;
+        }
+        .comment-box {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 15px;
+        }
+        .comment-box textarea {
+            width: 100%;
+            height: 60px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            font-size: 14px;
+            resize: none;
+            margin-bottom: 10px;
+        }
+        .comment-box button {
+            align-self: flex-end;
+            padding: 8px 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .comment-box button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="post-container">
+        <div class="post-header">
+            <p id="post-title" class="post-title">제목</p>
+            <p id="post-author" class="post-author">아이디</p>
+        </div>
+        <div id="post-content" class="post-content">
+            <p>내용</p>
+        </div>
+        
+        
+        <div id="post-date" class="post-footer">
+            2024.10.08 21:30 조회 0
+        </div>
+        <div class="comment-section">
+            <div class="comment-box">
+                <label for="comment">댓글 아이디</label>
+                <textarea id="comment" placeholder="댓글을 남겨보세요"></textarea>
+                <button type="button" onclick="submitComment()">등록</button>
+            </div>
+            <div id="comments-list">
+                <!-- Dynamically loaded comments will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Post _id를 URL query parameter에서 가져온다
+            const urlParams = new URLSearchParams(window.location.search);
+            const postId = urlParams.get('id');
+
+            if (postId) {
+                // Post의 내용을 가져와서 보여준다
+                fetchPostContent(postId);
+            } else {
+                // id가 없을 경우, error 메시지를 띄운다
+                document.body.innerHTML = '<p>Error: Post not found.</p>';
+            }
+        });
+
+        async function fetchPostContent(postId) {
+            try {
+                // api/debate 에서 전체 post의 내용을 가져온다
+                const response = await fetch('/api/debate');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const posts = await response.json();
+
+                // Post의 내용을 _id값을 이용해서 가져온다
+                const post = posts.find(post => post._id === postId);
+                if (post) {
+                    // Post내 내용을 페이지에 표시한다
+                    document.getElementById('post-title').textContent = post.title;
+                    document.getElementById('post-author').textContent = post.author;
+                    document.getElementById('post-date').textContent = new Date(post.createdAt).toLocaleDateString();
+                    document.getElementById('post-content').textContent = post.content;
+                } else {
+                    // Post를 찾지 못하면 error 메시지를 띄운다
+                    document.body.innerHTML = '<p>Error: Post not found.</p>';
+                }
+                
+            } catch (err) {
+                console.error('Error fetching post:', err);
+                document.body.innerHTML = '<p>Error: Unable to load post content.</p>';
+            }
+        }
+
+        function submitComment() {
+            const commentText = document.getElementById('comment').value;
+            if (commentText.trim() !== '') {
+                // Add the comment to the comments list dynamically for now
+                const commentsList = document.getElementById('comments-list');
+                const commentElement = document.createElement('p');
+                commentElement.textContent = commentText;
+                commentsList.appendChild(commentElement);
+
+                // Clear the textarea
+                document.getElementById('comment').value = '';
+
+                // Here you would typically send the comment to the backend server for storage
+                console.log('Comment submitted:', commentText);
+            } else {
+                alert('Please write a comment before submitting.');
+            }
+        }
+    </script>
+</body>
+</html>

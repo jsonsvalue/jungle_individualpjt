@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Artist's Canvas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            max-width: 800px;
+            padding-top: 20px;
+        }
+        .mainUI {
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .btn {
+            margin: 10px;
+        }
+        
+        img {
+            width: 300px;
+            height: 200px;
+        }
+        .Horizontal{
+            width: auto;
+            display: flex;
+            justify-content: space-between;
+        }
+        .inside-tab a {
+            display: block;
+            padding: 10px 50px;
+            margin: 30px 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            background-color: #f0f0f0;
+            color: black;
+            text-align: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .inside-tab a:hover {
+            background-color: #ddd;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            width: 100%;
+            padding: 10px;
+        }
+        .welcome-message {
+            margin-right: 10px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // JavaScript to check login status and toggle buttons accordingly
+        document.addEventListener('DOMContentLoaded', () => {
+            fetch('/api/session')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.loggedIn) {
+                        // User is logged in, hide login/signup buttons and show "My Page" button with username
+                        document.getElementById('login-btn').style.display = 'none';
+                        document.getElementById('signup-btn').style.display = 'none';
+                        document.getElementById('top-bar').style.display = 'flex';
+                        document.getElementById('username').textContent = `Welcome, ${data.user}님`;
+                    } else {
+                        // User is not logged in, show login/signup buttons and hide "My Page" button
+                        document.getElementById('login-btn').style.display = 'block';
+                        document.getElementById('signup-btn').style.display = 'block';
+                        document.getElementById('top-bar').style.display = 'none';
+                    }
+                });
+        });
+    </script>
+
+    <div class="container">
+        <div class="top-bar" id="top-bar" style="display: none;">
+            <span class="welcome-message" id="username">Welcome, {user}</span>
+            <a href="/mypage" id="my-page-btn" class="btn btn-warning">My Page</a>
+            <form action = "/logout" method = "POST" style = "display: inline;">
+                <button type = "submit" class = "btn btn-warning" id = "logout-btn">Log Out</button>
+            </form>      
+        </div>
+
+        <div class="mainUI">
+            <h1>그림쟁이의 캔버스</h1>
+            
+            <div class="Horizontal inside-tab">
+                <a href="/debate">토론 게시판</a>
+                <a href="/lesson">과외 게시판</a>
+                <a href="/enhance">실력 향상 게시판</a>
+                <a href="/picture">소재 게시판</a>
+            </div>
+
+            <a href="https://www.tripadvisor.com/Restaurant_Review-g187211-d1160292-Reviews-Le_Cafe_La_Nuit-Arles_Bouches_du_Rhone_Provence_Alpes_Cote_d_Azur.html/" target="_blank">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Vincent_van_Gogh_%281853-1890%29_Caf%C3%A9terras_bij_nacht_%28place_du_Forum%29_Kr%C3%B6ller-M%C3%BCller_Museum_Otterlo_23-8-2016_13-35-40.JPG/405px-Vincent_van_Gogh_%281853-1890%29_Caf%C3%A9terras_bij_nacht_%28place_du_Forum%29_Kr%C3%B6ller-M%C3%BCller_Museum_Otterlo_23-8-2016_13-35-40.JPG" width="682" height="454">
+            </a>
+            
+            <div class="Horizontal">
+                <a href="/login" id="login-btn" class="btn btn-primary">로그인</a>
+                <a href="/register" id="signup-btn" class="btn btn-success">회원가입</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

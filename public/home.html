@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Artist's Canvas</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8f9fa;
+            margin: 0;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            height: 100%;
+            width: 100%;
+            max-width: 800px;
+            padding-top: 20px;
+        }
+        .mainUI {
+            padding-top: 50px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-grow: 1;
+        }
+        .btn {
+            margin: 10px;
+        }
+        
+        img {
+            width: 300px;
+            height: 200px;
+        }
+        .Horizontal{
+            width: auto;
+            display: flex;
+            justify-content: space-between;
+        }
+        .inside-tab a {
+            display: block;
+            padding: 10px 50px;
+            margin: 30px 20px;
+
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            text-decoration: none;
+            background-color: #f0f0f0;
+            color: black;
+            
+            text-align: center;
+            justify-content: center;
+            width: 100%; /* Makes anchors take full width of the container */
+        }
+
+        .inside-tab a:hover {
+            background-color: #ddd; /* Optional: Changes background color on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <div class="mainUI">
+            <h1>그림쟁이의 캔버스</h1>
+            <h1></h1>
+            
+            <div class = "Horizontal inside-tab">
+                <a href = /debate>토론 게시판 </a>
+                <a href = /lesson>과외 게시판</a>
+                <a href = /enhance>실력 향상 게시판</a>
+                <a href = /picture>소재 게시판</a>
+            </div>
+
+            <a href="https://jungle.krafton.com/" target=""_blank>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b0/Vincent_van_Gogh_%281853-1890%29_Caf%C3%A9terras_bij_nacht_%28place_du_Forum%29_Kr%C3%B6ller-M%C3%BCller_Museum_Otterlo_23-8-2016_13-35-40.JPG/405px-Vincent_van_Gogh_%281853-1890%29_Caf%C3%A9terras_bij_nacht_%28place_du_Forum%29_Kr%C3%B6ller-M%C3%BCller_Museum_Otterlo_23-8-2016_13-35-40.JPG" width="682" height="454">
+            </a>
+
+
+
+        </div>
+    </div>
+</body>
+</html>
